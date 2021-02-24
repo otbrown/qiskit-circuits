@@ -1,7 +1,8 @@
 import argparse as ap
-import numpy as np
 import timeit as ti
 import qiskit as qk
+
+run_start = ti.default_timer()
 
 # handle arguments
 parser = ap.ArgumentParser(description='Read in number of qubits and number of repetitions.')
@@ -31,12 +32,22 @@ print("Running Hadamard benchmark")
 print("  Number of qubits: ", circ.num_qubits)
 print("  Number of repetitions: ", args.N_REPS)
 print("  1 Hadamard gate per qubit")
-print("  Total number of gates: ", N_GATES)
-
-print(circ.draw())
+print("Total number of gates: ", N_GATES)
+print()
 
 sim = qk.providers.aer.StatevectorSimulator()
 
+circuit_start = ti.default_timer()
 result = qk.execute(circ, sim).result()
+circuit_stop = ti.default_timer()
 
+print("Result metadata:")
 print(result.to_dict()['metadata'])
+print()
+
+run_stop = ti.default_timer()
+
+print("Results:")
+print('  Run time = {:g} s'.format(run_stop - run_start))
+print('  Circuit time = {:g} s'.format(circuit_stop - circuit_start))
+print('  Time per gate = {:g} s'.format((circuit_stop - circuit_start)/N_GATES))
