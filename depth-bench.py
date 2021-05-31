@@ -1,6 +1,8 @@
 import argparse as ap
 import timeit as ti
 import qiskit as qk
+from qiskit.providers import aer
+from mpi4py import MPI
 
 run_start = ti.default_timer()
 
@@ -28,26 +30,33 @@ circ.measure_all()
 
 N_GATES = args.N_REPS * circ.size()
 
-print("Running Hadamard benchmark")
-print("  Number of qubits: ", circ.num_qubits)
-print("  Number of repetitions: ", args.N_REPS)
-print("  1 Hadamard gate per qubit")
-print("Total number of gates: ", N_GATES)
-print()
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
 
-sim = qk.providers.aer.StatevectorSimulator()
+if rank == 0:
+    print("Running Hadamard benchmark")
+    print("  Number of qubits: ", circ.num_qubits)
+    print("  Number of repetitions: ", args.N_REPS)
+    print("  1 Hadamard gate per qubit")
+    print("Total number of gates: ", N_GATES)
+    print()
+
+sim = aer.StatevectorSimulator()
 
 circuit_start = ti.default_timer()
 result = qk.execute(circ, sim).result()
 circuit_stop = ti.default_timer()
 
+result_dict=result.to_dict()
+
 print("Result metadata:")
-print(result.to_dict()['metadata'])
+print(result_dict['metadata'])
 print()
 
 run_stop = ti.default_timer()
 
-print("Results:")
-print('  Run time = {:g} s'.format(run_stop - run_start))
-print('  Circuit time = {:g} s'.format(circuit_stop - circuit_start))
-print('  Time per gate = {:g} s'.format((circuit_stop - circuit_start)/N_GATES))
+if rank == 0:
+    print("Results:")
+    print('  Run time = {:g} s'.format(run_stop - run_start))
+    print('  Circuit time = {:g} s'.format(circuit_stop - circuit_start))
+    print('  Time per gate = {:g} s'.format((circuit_stop - circuit_start)/N_GATES))
