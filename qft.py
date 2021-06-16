@@ -3,7 +3,6 @@ import timeit as ti
 import qiskit as qk
 import math as m
 from qiskit import circuit
-from qiskit.compiler.transpiler import _transpile_circuit
 from qiskit.providers import aer
 from mpi4py import MPI
 
@@ -20,9 +19,9 @@ def parse_args():
 
 def main():
   run_start = ti.default_timer()
-
+  
   args = parse_args()
-
+  
   qft = qk.circuit.library.QFT(
     num_qubits=args.N_QUBITS,
     approximation_degree=0,
@@ -31,11 +30,10 @@ def main():
     insert_barriers=False,
   )
   qft.save_state(label='statevector')
-
+  
   sim = aer.AerSimulator(method='statevector')
 
   transp_qft = qk.transpile(qft, sim)
-
   N_GATES = transp_qft.size()
 
   COMM = MPI.COMM_WORLD
@@ -46,17 +44,13 @@ def main():
     print("  Number of qubits: ", args.N_QUBITS)
     print("  Number of gates: ", N_GATES)
     print()
-
+  
   qft_start = ti.default_timer()
-  result = sim.run(transp_qft, method='statevector', blocking_enable=True).result()
+
+  result = sim.run(transp_qft, method='statevector', blocking_enable=True, blocking_qubits=28).result()
+
+  COMM.Barrier()
   qft_stop = ti.default_timer()
-
-  result_dict=result.to_dict()
-
-  print("Result metadata:")
-  print(result_dict['metadata'])
-  print()
-
   run_stop = ti.default_timer()
 
   if RANK == 0:
@@ -69,3 +63,4 @@ def main():
 
 if __name__ == "__main__":
   main()
+
