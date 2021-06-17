@@ -60,6 +60,7 @@ def main():
     print('  Measured probability of |0..0> state = {:g}'.format(abs(result.get_statevector()[0])**2))
     print('  Calculated probability of |0..0> state = {:g}'.format(2**-args.N_QUBITS))
 
+  MPI.Finalize()
 
 if __name__ == "__main__":
   main()
